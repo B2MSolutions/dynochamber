@@ -1,0 +1,39 @@
+// schema -> helps in db creation, deletion and generic (very simple) operations
+var tokenSchema = {
+  key: {value: {keyType: "hash", type: "string"},
+        worldid: { keyType: "range", type: "string" }},
+  attributes: {
+    tokenType: {type: "string"},
+    enabled: {type: "boolean"}
+  }
+};
+
+// direct usage syntax:
+var tokenStore = dynochamber.buildStore(tokenSchema);
+tokenStore.createTable(callback);
+
+//IDEA: do not generate simplified operations
+//provide a way to directly use documentClient
+
+//getItem
+//GENERATED
+// tokenStore.getItem(keyObj, attributesList);
+tokenStore.getItem(getSchema, callback);
+
+//updateItem
+//NOT GENERATED
+tokenStore.updateItem(updateSchema, callback);
+
+//...rest is skipped...//
+//-----------------------------------------------------------
+
+//getToken(/* obj with named props */)
+// => getToken({tokenValue: "hello", attributes: []}, callback);
+var tokenOperations: {
+  tableName: "Token",
+  getToken: {
+    Key: {value: "_tokenValue_", worldId: "WORLD3"},
+    AttributesToGet: "_attributes_",
+    ElemezInputSchema: {tokenValue: joi.string().required()}
+  }
+};
