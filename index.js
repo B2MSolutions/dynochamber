@@ -33,39 +33,34 @@ dynochamber._addDynamoOperation = function(query, operation) {
   return _.merge(query, operation);
 };
 
-dynochamber._stringIsPlaceholder = function(stringValue) {
-  return stringValue.startsWith("{{") && stringValue.endsWith("}}");
-};
-
-dynochamber._stripPlaceholder = function(placeholder) {
-  const regex = /\{\{([a-zA-Z]\w*)\}\}/;
-  return placeholder.match(regex)[1];
-
-  // var match, extracted = [];
-  // while((match = regex.exec(placeholder)) != null) {
-  //   extracted.push(match[1]);
-  // }
-
-  // return extracted;
-};
-
 dynochamber._stringHasPlaceholders = function(stringValue) {
   const regex = /\{\{([a-zA-Z]\w*)\}\}/;
-  return stringValue.match(regex) != null;
+  return _.isString(stringValue) && stringValue.match(regex) != null;
 };
 
-dynochamber._substitutePlaceholders = function(stringValue, model) {
-  const regex = /\{\{([a-zA-Z]\w*)\}\}/g;
-  var matches, placeholders = [];
+dynochamber._stringIsPlaceholder = function(stringValue) {
+  const regex = /^\{\{([a-zA-Z]\w*)\}\}$/;
+  var match = regex.exec(stringValue);
 
-  while((matches = regex.exec(stringValue)) !== null) {
-    placeholders.push(matches[1]);
+  if (match != null) {
+    return match[1];
   }
 
-  return placeholders;
+  return false;
+};
+
+dynochamber._substitutePlaceholders = function(value, model) {
+  var replacementKey = dynochamber._stringIsPlaceholder(value);
+  if (replacementKey) return model[replacementKey];
+
+  //TODO ivanbokii use placholder finders to replace all placeholders
+  return 100;
 };
 
 dynochamber._fillPlaceholders = function(query, model) {
+  // var placeholderFinders = _.map(model, (value, key) => ({[key]: {value, regexp: `\{\{ ${key} \}\}`}}));
+  // console.log(placeholderFinders);
+
   traverse(query).forEach(function(value) {
     if (dynochamber._stringHasPlaceholders(value)) {
       this.update(dynochamber._substitutePlaceholders(value, model));
@@ -82,7 +77,6 @@ dynochamber._cleanFromNonDynamoData = function(query) {
 
 dynochamber._addOperataion = function(store, operation, operationName) {
   store[operationName] = function(model, callback) {
-
     var buildDynamoQuery = _.flow(
       _.partialRight(dynochamber._addTableName, store._tableName),
       _.partialRight(dynochamber._addDynamoOperation, operation),
@@ -93,7 +87,8 @@ dynochamber._addOperataion = function(store, operation, operationName) {
     var initialQuery = {};
     var query = buildDynamoQuery(initialQuery);
 
-    return store._documentClient[operation._type](query, callback);
+    return query;
+    // return store._documentClient[operation._type](query, callback);
   };
 
   return store;

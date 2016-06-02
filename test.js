@@ -1,5 +1,5 @@
 var aws = require("aws-sdk");
-var _ = require('lodash');
+var _ = require('lodash/fp');
 var dynochamber = require('./index');
 
 aws.config.update({
@@ -13,12 +13,16 @@ var store = dynochamber.loadStore({
   operations: {
     getWorlds: {
       _type: 'get',
-      Key: {id: "{{id}}"}
+      Key: {id: "this:{{id}}:sparta"}
     }
   }
 });
 
+// var a = store.getWorlds({id: " is "});
+// console.log(a);
+// var a = dynochamber._substitutePlaceholders("{{hello}} and {{fcu}}");
+// console.log(a);
 
-// store.getWorlds();
-var a = dynochamber._substitutePlaceholders("{{hello}} and {{fcu}}");
-console.log(a);
+console.log("hello this {{ommgomg}} world".replace(regexp, "ANOTHER"));
+console.log("{{ommgomg}}".replace(regexp, {omg: "hello"}));
+
