@@ -8,14 +8,17 @@ aws.config.update({
   secretAccessKey: process.env.AWS_SECRET_KEY
 });
 
-dynochamber.loadStore({
-  tableName: 'elemez.development.worlds'
-  // operations: {
-  //   getWorlds: {
-  //     _type: 'get',
-  //     Key: {id: }
-  //   }
-  // }
+var store = dynochamber.loadStore({
+  tableName: 'elemez.development.worlds',
+  operations: {
+    getWorlds: {
+      _type: 'get',
+      Key: {id: "{{id}}"}
+    }
+  }
 });
 
 
+// store.getWorlds();
+var a = dynochamber._substitutePlaceholders("{{hello}} and {{fcu}}");
+console.log(a);
