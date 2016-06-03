@@ -11,20 +11,25 @@ aws.config.update({
 var store = dynochamber.loadStore({
   tableName: 'elemez.development.worlds',
   operations: {
-    getWorlds: {
+    getWorld: {
       _type: 'get',
       Key: {id: "{{id}}"}
+    },
+    getAllWorlds: {
+      _type: 'scan',
+      FilterExpression: "contains(#name, :name)",
+      ExpressionAttributeNames: {'#name': 'name'},
+      ExpressionAttributeValues: {':name': '{{name}}'}
     }
   }
 });
 
-var a = store.getWorlds({id: 100});
-console.log(a);
-// console.log(a);
-// var a = dynochamber._substitutePlaceholders(
-//   "{{hello}} and {{fcu}}",
-//   {hello: "world", fcu: "you"});
+store.getWorld({id: '9b0546eb8601441eaddef58c31d2ca87'}, function(err, results) {
+  console.log("ERROR: ", err);
+  console.log(JSON.stringify(results, ' ', 2));
+});
 
-// console.log("hello this {{ommgomg}} world".replace(regexp, "ANOTHER"));
-// console.log("{{ommgomg}}".replace(regexp, {omg: "hello"}));
-
+store.getAllWorlds({name: 'Development'}, function(err, results) {
+  console.log("ERROR: ", err);
+  console.log(JSON.stringify(results, ' ', 2));
+});
