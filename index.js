@@ -19,7 +19,6 @@ dynochamber.loadStore = function(storeDefinition) {
 
   //TODO populate with standard operations: createTable, deleteTable etc.
 
-  // populate with business operations
   store = _.reduce(operations, dynochamber._addOperataion, store);
   return store;
 };
@@ -53,14 +52,17 @@ dynochamber._substitutePlaceholders = function(value, model) {
   var replacementKey = dynochamber._stringIsPlaceholder(value);
   if (replacementKey) return model[replacementKey];
 
-  //TODO ivanbokii use placholder finders to replace all placeholders
-  return 100;
+  const regex = /\{\{([a-zA-Z]\w*)\}\}/g;
+  var match;
+  while ((match = regex.exec(value)) !== null) {
+    var keyName = match[1];
+    value = value.replace(new RegExp(`\{\{${keyName}\}\}`), model[keyName]);
+  }
+
+  return value;
 };
 
 dynochamber._fillPlaceholders = function(query, model) {
-  // var placeholderFinders = _.map(model, (value, key) => ({[key]: {value, regexp: `\{\{ ${key} \}\}`}}));
-  // console.log(placeholderFinders);
-
   traverse(query).forEach(function(value) {
     if (dynochamber._stringHasPlaceholders(value)) {
       this.update(dynochamber._substitutePlaceholders(value, model));

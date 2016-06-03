@@ -13,16 +13,18 @@ var store = dynochamber.loadStore({
   operations: {
     getWorlds: {
       _type: 'get',
-      Key: {id: "this:{{id}}:sparta"}
+      Key: {id: "{{id}}"}
     }
   }
 });
 
-// var a = store.getWorlds({id: " is "});
+var a = store.getWorlds({id: 100});
+console.log(a);
 // console.log(a);
-// var a = dynochamber._substitutePlaceholders("{{hello}} and {{fcu}}");
-// console.log(a);
+// var a = dynochamber._substitutePlaceholders(
+//   "{{hello}} and {{fcu}}",
+//   {hello: "world", fcu: "you"});
 
-console.log("hello this {{ommgomg}} world".replace(regexp, "ANOTHER"));
-console.log("{{ommgomg}}".replace(regexp, {omg: "hello"}));
+// console.log("hello this {{ommgomg}} world".replace(regexp, "ANOTHER"));
+// console.log("{{ommgomg}}".replace(regexp, {omg: "hello"}));
 
