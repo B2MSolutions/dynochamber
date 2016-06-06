@@ -41,8 +41,12 @@ queryBuilder._substitutePlaceholders = function(value, model) {
   return value;
 };
 
-queryBuilder._fillPlaceholders = function(query, model) {
+queryBuilder.fillPlaceholders = function(query, model) {
   traverse(query).forEach(function(value) {
+    if (_.isFunction(value)) {
+      this.update(value(model));
+    }
+
     if (queryBuilder._stringHasPlaceholders(value)) {
       this.update(queryBuilder._substitutePlaceholders(value, model));
     }
@@ -60,7 +64,7 @@ queryBuilder.build = function(tableName, operationTemplate, model) {
   var buildDynamoQuery = _.flow(
     _.partialRight(queryBuilder._addTableName, tableName),
     _.partialRight(queryBuilder._addDynamoOperation, operationTemplate),
-    _.partialRight(queryBuilder._fillPlaceholders, model),
+    _.partialRight(queryBuilder.fillPlaceholders, model),
 
     queryBuilder._cleanFromNonDynamoData);
 

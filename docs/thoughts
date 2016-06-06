@@ -37,3 +37,29 @@ var tokenOperations: {
     ElemezInputSchema: {tokenValue: joi.string().required()}
   }
 };
+
+//--------------
+//create table
+var table = {
+  schema: {
+    key: {
+      name: joi.string().required()
+    },
+    attributes: {
+      visitors: joi.number(),
+      director: joi.string()
+    }
+  }
+}
+
+helpers.pages('all', store.queryMoviesWithSomeCondition, model, function(err, data) {
+});
+
+model._options = {
+  pages: 'all',
+  pageCallback: function() {}
+}
+
+store.queryMoviesWithSomeCondition(model, function(err, dataFromAllPages) {
+
+})
