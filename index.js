@@ -36,7 +36,26 @@ dynochamber._pagingOperation = function(params, callback) {
   //if user does not want paging operation, then it is a standard operation
   if (!params.queryOptions.pages) return dynochamber._standardOperation(params, callback);
 
-  //TODO continue from here
+  var lastEvaluatedKey;
+  var query = params.builtQuery;
+  return async.doWhilst(function(whileCallback) {
+    if (lastEvaluatedKey) query.ExclusiveStartKey = lastEvaluatedKey;
+
+    // TODO ivanbokii support mapping!!!
+    params.store._documentClient[params.operationType](query, function(err, results) {
+      if (err) return whileCallback(err);
+
+      lastEvaluatedKey = results.LastEvaluatedKey;
+      results = params.options.raw === true ? results : params.dynochamberOperation.extractResult(results);
+
+      if (_.isFunction(params.options.pageCallback)) params.options.pageCallback(results, whileCallback);
+
+      return whileCallback();
+    });
+
+  }, function() {
+    return !_.isUndefined(lastEvaluatedKey) && !_.isNull(lastEvaluatedKey);
+  }, callback);
 };
 
 dynochamber._standardOperation = function(params, callback) {

@@ -57,7 +57,9 @@ helpers.pages('all', store.queryMoviesWithSomeCondition, model, function(err, da
 
 model._options = {
   pages: 'all',
-  pageCallback: function() {}
+  pageCallback: function() {}, // or use this one for transformation when gathering is ON
+  pageTransformCallback: function() {},
+  gatherResults: true
 }
 
 store.queryMoviesWithSomeCondition(model, function(err, dataFromAllPages) {
