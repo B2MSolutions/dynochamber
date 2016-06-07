@@ -6,6 +6,7 @@ var dynochamber = require('./index');
 var dynoHelpers = require('./helpers');
 
 var storeDescription = {
+
   tableName: "Movies",
   operations: {
     addMovie: {
@@ -30,7 +31,8 @@ var storeDescription = {
       _type: 'batchGet',
       RequestItems: {
         Movies: {Keys: '{{keys}}'}
-      }
+      },
+      Limit: 3
     },
     addGrossAndSetRating: {
       _type: 'update',
@@ -42,7 +44,8 @@ var storeDescription = {
       }
     },
     getAllMovies: {
-      _type: 'scan'
+      _type: 'scan',
+      Limit: 3
     },
     setHighRatingsForHighGrossing: {
       _type: 'update',
@@ -183,5 +186,91 @@ describe("integration tests for dynochamber", function() {
         return done();
       }));
     }));
+  });
+
+  describe("paging", function() {
+    var store = null;
+
+    before(function(done) {
+      var movies = [
+        {year: 1995, title: 'ToyStory'},
+        {year: 1990, title: 'It'},
+        {year: 1982, title: 'The Thing'},
+        {year: 1978, title: 'Halloween'}
+
+      ];
+
+      store = dynochamber.loadStore(storeDescription);
+      store.addMovies({movies}, done);
+    });
+
+    it("should be supported by scan", function(done) {
+      var currentPage = 0;
+      var expectedPages = [
+        [{
+          "title": "Matrix",
+          "year": 2001
+        },
+         {
+           "title": "ToyStory",
+           "year": 1995
+         },
+         {
+           "title": "It",
+           "year": 1990
+         }
+        ],
+        [{
+          "title": "The Thing",
+          "year": 1982
+        },
+         {
+           "title": "Interstellar",
+           "gross": 10000000,
+           "year": 2015
+         },
+         {
+           "rating": 4,
+           "gross": 120000,
+           "title": "TMNT",
+           "year": 2015
+         }
+        ],
+        [{
+          "title": "Robocop",
+          "year": 1985
+        },
+         {
+           "title": "Halloween",
+           "year": 1978
+         }
+        ]];
+
+      var pageCallback = function(page, callback) {
+        expect(page).to.deep.equal(expectedPages[currentPage++]);
+        return callback();
+      };
+
+      store.getAllMovies({_options: {pages: 'all', pageCallback}}, done);
+    });
+
+    it("should be supported by batchGet", function(done) {
+      var currentPage = 0;
+
+      var pageCallback = function(page, callback) {
+        console.log(JSON.stringify(page, ' ', 2));
+        return callback();
+      };
+
+      var payload = {
+        keys: [{year: 1985, title: 'Robocop'},
+               {year: 1978, title: 'Halloween'},
+               {year: 1995, title: 'ToyStory'},
+               {year: 1990, title: 'It'}
+              ],
+        _options: {pages: 'all', pageCallback}
+      };
+      store.getMovies(payload, done);
+    });
   });
 });

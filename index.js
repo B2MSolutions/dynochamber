@@ -23,6 +23,7 @@ dynochamber.loadStore = function(storeDefinition) {
 
 dynochamber._pagingOperation = function(params, callback) {
   //if user does not want paging operation, then it is a standard operation
+  //TODO ivanbokii support pages
   if (!params.queryOptions.pages) return dynochamber._standardOperation(params, callback);
 
   var lastEvaluatedKey;
@@ -36,8 +37,7 @@ dynochamber._pagingOperation = function(params, callback) {
       lastEvaluatedKey = results.LastEvaluatedKey;
       results = params.queryOptions.raw === true ? results : params.dynochamberOperation.extractResult(results);
 
-      if (_.isFunction(params.queryOptions.pageCallback)) params.queryOptions.pageCallback(results, whileCallback);
-
+      if (_.isFunction(params.queryOptions.pageCallback)) return params.queryOptions.pageCallback(results, whileCallback);
       return whileCallback();
     });
 
