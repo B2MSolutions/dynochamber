@@ -21,17 +21,6 @@ dynochamber.loadStore = function(storeDefinition) {
   return store;
 };
 
-dynochamber._operations = {
-  batchGet: {action: dynochamber._pagingOperation, extractResult: r => r.Responses},
-  get: {action: dynochamber._standardOperation, extractResult: r => r.Item}
-  // batchWrite: dynochamber._standardOperation,
-  // delete: dynochamber._standardOperation,
-  // put: dynochamber._standardOperation,
-  // query: dynochamber._pagingOperation,
-  // scan: dynochamber._pagingOperation,
-  // update: dynochamber._standardOperation
-};
-
 dynochamber._pagingOperation = function(params, callback) {
   //if user does not want paging operation, then it is a standard operation
   if (!params.queryOptions.pages) return dynochamber._standardOperation(params, callback);
@@ -41,14 +30,13 @@ dynochamber._pagingOperation = function(params, callback) {
   return async.doWhilst(function(whileCallback) {
     if (lastEvaluatedKey) query.ExclusiveStartKey = lastEvaluatedKey;
 
-    // TODO ivanbokii support mapping!!!
     params.store._documentClient[params.operationType](query, function(err, results) {
       if (err) return whileCallback(err);
 
       lastEvaluatedKey = results.LastEvaluatedKey;
-      results = params.options.raw === true ? results : params.dynochamberOperation.extractResult(results);
+      results = params.queryOptions.raw === true ? results : params.dynochamberOperation.extractResult(results);
 
-      if (_.isFunction(params.options.pageCallback)) params.options.pageCallback(results, whileCallback);
+      if (_.isFunction(params.queryOptions.pageCallback)) params.queryOptions.pageCallback(results, whileCallback);
 
       return whileCallback();
     });
@@ -62,7 +50,7 @@ dynochamber._standardOperation = function(params, callback) {
   return params.store._documentClient[params.operationType](params.builtQuery, function(err, results) {
     if (err) return callback(err);
 
-    if (params.options.raw === true) {
+    if (params.queryOptions.raw === true) {
       return callback(null, results);
     }
 
@@ -72,11 +60,13 @@ dynochamber._standardOperation = function(params, callback) {
 
 dynochamber._addOperataion = function(store, operation, operationName) {
   store[operationName] = function(model, callback) {
+    model = model || {};
+
     var builtQuery = queryBuilder.build(store._tableName, operation, model);
     var queryActionParams = {
       store,
       builtQuery,
-      queryOptions: model._options,
+      queryOptions: model._options || {},
       operationType: operation._type,
       dynochamberOperation: dynochamber._operations[operation._type]
     };
@@ -85,6 +75,17 @@ dynochamber._addOperataion = function(store, operation, operationName) {
   };
 
   return store;
+};
+
+dynochamber._operations = {
+  batchGet: {action: dynochamber._pagingOperation, extractResult: r => r.Responses},
+  get: {action: dynochamber._standardOperation, extractResult: r => r.Item},
+  query: {action: dynochamber._pagingOperation, extractResult: r => r.Items},
+  scan: {action: dynochamber._pagingOperation, extractResult: r => r.Items},
+  put: {action: dynochamber._standardOperation, extractResult: _.identity},
+  delete: {action: dynochamber._standardOperation, extractResult: _.identity},
+  update: {action: dynochamber._standardOperation, extractResult: _.identity},
+  batchWrite: {action: dynochamber._standardOperation, extractResult: _.identity}
 };
 
 module.exports = dynochamber;

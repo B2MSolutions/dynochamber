@@ -41,6 +41,11 @@ queryBuilder._substitutePlaceholders = function(value, model) {
   return value;
 };
 
+queryBuilder._cleanFromNonDynamoData = function(query) {
+  const nonDynamoFields = ["_type"];
+  return _.omit(query, nonDynamoFields);
+};
+
 queryBuilder.fillPlaceholders = function(query, model) {
   traverse(query).forEach(function(value) {
     if (_.isFunction(value)) {
@@ -53,11 +58,6 @@ queryBuilder.fillPlaceholders = function(query, model) {
   });
 
   return query;
-};
-
-queryBuilder._cleanFromNonDynamoData = function(query) {
-  const nonDynamoFields = ["_type"];
-  return _.omit(query, nonDynamoFields);
 };
 
 queryBuilder.build = function(tableName, operationTemplate, model) {
