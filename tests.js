@@ -65,7 +65,8 @@ var storeDescription = {
       },
       ExpressionAttributeValues: {
         ':year': '{{year}}'
-      }
+      },
+      Limit: 3
     }
   }
 };
@@ -254,23 +255,36 @@ describe("integration tests for dynochamber", function() {
       store.getAllMovies({_options: {pages: 'all', pageCallback}}, done);
     });
 
-    it("should be supported by batchGet", function(done) {
-      var currentPage = 0;
+    it("should be supported by query", function(done) {
+      store.addMovies({movies: [
+        {year: 1985, title: 'Back to the Future'},
+        {year: 1985, title: 'The Goonies'},
+        {year: 1985, title: 'The Breakfast Club'},
+        {year: 1985, title: 'Rocky IV'},
+        {year: 1985, title: 'A Nightmare on Elm Street Part 2: Freddy\'s Revenge'},
+        {year: 1985, title: 'Commando'}
+      ]}, handleError(done, function() {
+        var currentPage = 0;
+        var titles = [];
 
-      var pageCallback = function(page, callback) {
-        console.log(JSON.stringify(page, ' ', 2));
-        return callback();
-      };
+        var pageCallback = function(page, callback) {
+          _.each(page, m => titles.push(m.title));
+          return callback();
+        };
 
-      var payload = {
-        keys: [{year: 1985, title: 'Robocop'},
-               {year: 1978, title: 'Halloween'},
-               {year: 1995, title: 'ToyStory'},
-               {year: 1990, title: 'It'}
-              ],
-        _options: {pages: 'all', pageCallback}
-      };
-      store.getMovies(payload, done);
+        var payload = {
+          year: 1985,
+          _options: {
+            pageCallback,
+            pages: 'all'
+          }
+        };
+
+        store.queryMoviesByYear(payload, handleError(done, function() {
+          expect(titles.length).to.equal(7);
+          return done();
+        }));
+      }));
     });
   });
 });
