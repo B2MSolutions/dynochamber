@@ -46,11 +46,22 @@ var storeDescription = {
     },
     setHighRatingsForHighGrossing: {
       _type: 'update',
+      Key: '{{key}}',
       UpdateExpression: 'set rating = :rating',
       ConditionExpression: 'gross > :grossLevel',
       ExpressionAttributeValues: {
         ':rating': '{{rating}}',
-        ':grossLevel': '{{grossLevel}}'
+        ':grossLevel': 500000
+      }
+    },
+    queryMoviesByYear: {
+      _type: 'query',
+      KeyConditionExpression: '#year = :year',
+      ExpressionAttributeNames: {
+        '#year': 'year'
+      },
+      ExpressionAttributeValues: {
+        ':year': '{{year}}'
       }
     }
   }
@@ -153,10 +164,24 @@ describe("integration tests for dynochamber", function() {
     }));
   });
 
-  // it("should update movie with conditional", function() {
-  //   var store = dynochamber.loadStore(storeDescription);
+  it("should update movie with conditional", function(done) {
+    var store = dynochamber.loadStore(storeDescription);
 
-  //   store.setHighRatingsForHighGrossing({rating: 10, grossLevel: 500000}, handleError(done, function(results) {
-  //   }));
-  // });
+    store.setHighRatingsForHighGrossing({key: {year: 2015, title: 'TMNT'}, rating: 10}, function(err, results) {
+      expect(err.code).to.deep.equal("ConditionalCheckFailedException");
+      return done();
+    });
+  });
+
+  it("should query movies based on the year", function(done) {
+    var store = dynochamber.loadStore(storeDescription);
+
+    store.addMovies({movies: [{year: 2001, title: 'Matrix'}, {year: 1985, title: 'Robocop'}]}, handleError(done, function(results) {
+      store.queryMoviesByYear({year: 2001}, handleError(done, function(results) {
+        expect(results.length).to.equal(1);
+        expect(results[0]).to.deep.equal({year: 2001, title: 'Matrix'});
+        return done();
+      }));
+    }));
+  });
 });

@@ -12,8 +12,4 @@ helpers.batchWrite = function(options) {
   };
 };
 
-helpers.pager = function(options) {
-  
-};
-
 module.exports = helpers;

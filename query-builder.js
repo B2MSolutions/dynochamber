@@ -47,6 +47,8 @@ queryBuilder._cleanFromNonDynamoData = function(query) {
 };
 
 queryBuilder.fillPlaceholders = function(query, model) {
+  query = _.clone(query);
+
   traverse(query).forEach(function(value) {
     if (_.isFunction(value)) {
       this.update(value(model));
