@@ -61,6 +61,11 @@ dynochamber._addOperataion = function(store, operation, operationName) {
   store[operationName] = function(model, callback) {
     model = model || {};
 
+    if (operation._validator) {
+      var validationResults = operation._validator(model);
+      if (validationResults && validationResults.failed) return callback(validationResults);
+    }
+
     var builtQuery = queryBuilder.build(store._tableName, operation, model);
     var queryActionParams = {
       store,

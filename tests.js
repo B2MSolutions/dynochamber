@@ -287,4 +287,70 @@ describe("integration tests for dynochamber", function() {
       }));
     });
   });
+
+  describe("validation", function() {
+    it("should fail if validator is present and fails", function(done) {
+      var descriptionWithValidator = {
+        tableName: "Movies",
+        operations: {
+          addMovie: {
+            _type: 'put',
+            _validator: m => {
+              if(_.isUndefined(m.gross) || _.isNull(m.gross)) return {failed: true, message: 'must have gross field'};
+              return null;
+            },
+            Item: '{{movie}}'
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithValidator);
+
+      store.addMovie({movie: {year: 2010, title: 'Dark Knight'}}, function(err, results) {
+        expect(results).to.not.exist;
+        expect(err).to.deep.equal({failed: true, message: 'must have gross field'});
+        return done();
+      });
+    });
+
+    it("should not fail if validator is present, but do not fail", function(done) {
+      var descriptionWithValidator = {
+        tableName: "Movies",
+        operations: {
+          addMovie: {
+            _type: 'put',
+            _validator: m => ({failed: false}),
+            Item: '{{movie}}'
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithValidator);
+
+      store.addMovie({movie: {year: 2010, title: 'Dark Knight'}}, function(err, results) {
+        expect(err).to.not.exist;
+        return done();
+      });
+    });
+
+    it("should not fail if validator returns nothing", function(done) {
+      var descriptionWithValidator = {
+        tableName: "Movies",
+        operations: {
+          addMovie: {
+            _type: 'put',
+            _validator: m => null,
+            Item: '{{movie}}'
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithValidator);
+
+      store.addMovie({movie: {year: 2011, title: 'Dark Knight Rises'}}, function(err, results) {
+        expect(err).to.not.exist;
+        return done();
+      });
+    });
+  });
 });
