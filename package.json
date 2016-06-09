@@ -1,13 +1,13 @@
 {
   "name": "dynochamber",
   "version": "1.0.0",
-  "description": "",
+  "description": "Write DynamoDB queries in declarative way",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "python ./tests-runner.py"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Ivan Bokii",
+  "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.5",
     "aws-sdk": "^2.3.16",
