@@ -132,7 +132,7 @@ store.getMovie({part: '3'})
 
 ---
 ### Store Description
-Store description is an object that describes all store's operations and also contains an additional information required for store construction.
+Store description is an object that describes all store operations and also contains an additional information required for store construction.
 
 ```javascript
 {
@@ -176,3 +176,24 @@ var pageCallback = function(page, callback) {
 
 store.scanItems({_options: {page: 'all', pageCallback: pageCallback}, done);
 ```
+---
+### Validation
+You can add a validation function to a store description.
+
+```javascript
+{
+	tableName: "Name of the table on which all operatoins are performed",
+    operations: { //store's operations
+    	nameOfOperation: { //name of an operation on a store
+        	_type: 'query',
+        	// DocumentClient query goes here
+            _validator: function(obj) { /* validation logic */ }
+        }
+    }
+}
+```
+
+Validation function gets called with an object that use passes to a store operation. To fail, validation function should return object with `failed` property set to `true`. All other results are considered non-failed.
+
+---
+Code released under the MIT license
