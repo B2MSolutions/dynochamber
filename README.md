@@ -159,3 +159,20 @@ Store description is an object that describes all store's operations and also co
     }
 }
 ```
+---
+### Paging support
+You can pass options as a part of an object that you pass to a store. For now, options are used only to support paging. There are two poroperties that you can use for it - `pages` and `pageCallback`
+
+- **pages** - for now, this property can have only one value - 'all', otherwise your page callback won't work. In future, this property would be used to indicate over how many pages  you want to iterate.
+- **pageCallback** - function that gets called on every page processed received by the library.
+
+Example:
+```javascript
+var pageCallback = function(page, callback) {
+	// do something with the page
+    // you can report errors by calling the passed callback with an error
+    callback();
+};
+
+store.scanItems({_options: {page: 'all', pageCallback: pageCallback}, done);
+```
