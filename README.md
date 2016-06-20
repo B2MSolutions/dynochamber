@@ -158,7 +158,7 @@ Store description is an object that describes all store operations and also cont
             // in addition to standard DynamoDB query fields we also need to specify
             // the type of operation. "query" in this case.
             // Supported types: put, get, delete, update, query, batchGet, 
-            // batchWrite, scan  (everything you can do with DocumentClient
+            // batchWrite, scan  (everything you can do with DocumentClient)
             _type: "query"
         }
     }
