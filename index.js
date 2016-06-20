@@ -28,6 +28,8 @@ dynochamber._pagingOperation = function(params, callback) {
 
   var lastEvaluatedKey;
   var query = params.builtQuery;
+  var reducerResult = params.queryOptions.pageReduceInitial || null;
+
   return async.doWhilst(function(whileCallback) {
     if (lastEvaluatedKey) query.ExclusiveStartKey = lastEvaluatedKey;
 
@@ -38,12 +40,18 @@ dynochamber._pagingOperation = function(params, callback) {
       results = params.queryOptions.raw === true ? results : params.dynochamberOperation.extractResult(results);
 
       if (_.isFunction(params.queryOptions.pageCallback)) return params.queryOptions.pageCallback(results, whileCallback);
+      if (_.isFunction(params.queryOptions.pageReduce)) {
+        reducerResult = params.queryOptions.pageReduce(reducerResult, results);
+      }
+
       return whileCallback();
     });
 
   }, function() {
     return !_.isUndefined(lastEvaluatedKey) && !_.isNull(lastEvaluatedKey);
-  }, callback);
+  }, function(err, results) {
+    return callback(err, params.queryOptions.pageReduce ? reducerResult : null);
+  });
 };
 
 dynochamber._standardOperation = function(params, callback) {
@@ -61,6 +69,8 @@ dynochamber._standardOperation = function(params, callback) {
 dynochamber._addOperataion = function(store, operation, operationName) {
   store[operationName] = function(model, callback) {
     model = model || {};
+    var options = model._options || {};
+    model = queryBuilder.cleanFromNonDynamoData(model);
 
     if (operation._validator) {
       var validationResults = operation._validator(model);
@@ -71,7 +81,7 @@ dynochamber._addOperataion = function(store, operation, operationName) {
     var queryActionParams = {
       store,
       builtQuery,
-      queryOptions: model._options || {},
+      queryOptions: options,
       operationType: operation._type,
       dynochamberOperation: dynochamber._operations[operation._type]
     };
@@ -91,6 +101,20 @@ dynochamber._operations = {
   delete: {action: dynochamber._standardOperation, extractResult: _.identity},
   update: {action: dynochamber._standardOperation, extractResult: _.identity},
   batchWrite: {action: dynochamber._standardOperation, extractResult: _.identity}
+};
+
+//---helper options---
+dynochamber.makeRecordsCounter = function(queryObj) {
+  queryObj = queryObj || {};
+  var options = queryObj ? (queryObj._options || {}) : {};
+
+  queryObj._options =  _.assign(options, {
+    raw: true,
+    pages: 'all',
+    pageReduce: (result, page) => result + page.Count, pageReduceInitial: 0
+  });
+
+  return queryObj;
 };
 
 module.exports = dynochamber;

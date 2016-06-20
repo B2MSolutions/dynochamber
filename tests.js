@@ -67,6 +67,11 @@ var storeDescription = {
         ':year': '{{year}}'
       },
       Limit: 3
+    },
+    getMoviesCountWithPaging: {
+      _type: 'scan',
+      Select: 'COUNT',
+      Limit: 2
     }
   }
 };
@@ -312,6 +317,20 @@ describe("integration tests for dynochamber", function() {
         }));
       }));
     });
+
+    it("should support page reducer", function(done) {
+      store.getMoviesCountWithPaging({_options: {raw: true, pages: 'all', pageReduce: (result, page) => result + page.Count, pageReduceInitial: 0}}, handleError(done, function(result) {
+        expect(result).to.equal(14);
+        return done();
+      }));
+    });
+
+    it("should support helper paging reducer options", function(done) {
+      store.getMoviesCountWithPaging(dynochamber.makeRecordsCounter(), handleError(done, function(result) {
+        expect(result).to.equal(14);
+        return done();
+      }));
+    });
   });
 
   describe("validation", function() {
@@ -374,6 +393,26 @@ describe("integration tests for dynochamber", function() {
       var store = dynochamber.loadStore(descriptionWithValidator);
 
       store.addMovie({movie: {year: 2011, title: 'Dark Knight Rises'}}, function(err, results) {
+        expect(err).to.not.exist;
+        return done();
+      });
+    });
+
+    it("should apply validation on pure model", function(done) {
+      var descriptionWithValidator = {
+        tableName: "Movies",
+        operations: {
+          addMovie: {
+            _type: 'put',
+            _validator: m => m._options ? {failed: true} : {failed: false},
+            Item: '{{movie}}'
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithValidator);
+
+      store.addMovie({movie: {year: 2011, title: 'Dark Knight Rises'}, _options: {}}, function(err, results) {
         expect(err).to.not.exist;
         return done();
       });

@@ -41,8 +41,8 @@ queryBuilder._substitutePlaceholders = function(value, model) {
   return value;
 };
 
-queryBuilder._cleanFromNonDynamoData = function(query) {
-  const nonDynamoFields = ["_type", "_validator"];
+queryBuilder.cleanFromNonDynamoData = function(query) {
+  const nonDynamoFields = ["_type", "_validator", "_options"];
   return _.omit(query, nonDynamoFields);
 };
 
@@ -69,7 +69,7 @@ queryBuilder.build = function(tableName, operationTemplate, model) {
     _.partialRight(queryBuilder._addDynamoOperation, operationTemplate),
     _.partialRight(queryBuilder.fillPlaceholders, model),
 
-    queryBuilder._cleanFromNonDynamoData);
+    queryBuilder.cleanFromNonDynamoData);
 
   var initialQuery = {};
   return buildDynamoQuery(initialQuery);
