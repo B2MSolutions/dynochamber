@@ -64,9 +64,11 @@ var storeDefinition = {
 	tableName: 'movies',
     operations: {
     	getMovie: {
+    		_type: 'get',
         	Key: '{{key}}',
         },
         updateMovie: {
+        	_type: 'update',
         	Key: '{{key}}',
         	UpdateExpression: "set info.rating = :r, info.plot=:p, info.actors=:a",
             ExpressionAttributeValues:{
@@ -77,6 +79,7 @@ var storeDefinition = {
             ReturnValues:"UPDATED_NEW"
         },
         addRating: {
+        	_type: 'update',
         	Key: '{{key}}',
             UpdateExpression: "set info.rating = info.rating + :val",
             ExpressionAttributeValues:{
@@ -109,6 +112,7 @@ Dynochamber uses placeholders to insert data that you pass to generated store fu
 
 ```javascript
 getMovie: {
+	_type: 'get',
 	Key: '{{key}}',
 }
 //....
@@ -120,6 +124,7 @@ When Dynochamber constructs this query it finds placeholder's name in passed obj
 Placeholders can also be a part of a string
 ```javascript
 getMovie: {
+	_type: 'get',
 	Key: 'Aliens {{part}}',
 }
 //....
