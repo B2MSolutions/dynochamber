@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var aws = require('aws-sdk');
 var mocha = require('mocha');
 var expect = require('chai').expect;
 var provision = require('./provision-tests');
@@ -6,7 +7,6 @@ var dynochamber = require('./index');
 var dynoHelpers = require('./helpers');
 
 var storeDescription = {
-
   tableName: "Movies",
   operations: {
     addMovie: {
@@ -189,6 +189,32 @@ describe("integration tests for dynochamber", function() {
     }));
   });
 
+  it("should support tableName as a function", function(done) {
+    var storeDefinition = {
+      tableName: _ => "Movies",
+      operations: {
+        getMovie: {
+          _type: 'get',
+          Key: '{{key}}'
+        }
+      }
+    };
+
+    var store = dynochamber.loadStore(storeDescription);
+
+    store.getMovie({key: {year: 2015, title: "TMNT"}}, handleError(done, function(results) {
+      var expectedResult = {
+        "rating": 4,
+        "gross": 120000,
+        "title": "TMNT",
+        "year": 2015
+      };
+
+      expect(results).deep.equal(expectedResult);
+      return done();
+    }));
+  });
+
   describe("paging", function() {
     var store = null;
 
@@ -351,6 +377,21 @@ describe("integration tests for dynochamber", function() {
         expect(err).to.not.exist;
         return done();
       });
+    });
+  });
+
+  describe("external dynamoDB", function() {
+    it('should fail when dynamodb is reconfigured with a custom dynamodb client', function(done) {
+      var dynamodbClient = new aws.DynamoDB({endpoint: new aws.Endpoint("http://localhost:4242")});
+      var store = dynochamber.loadStore(storeDescription, dynamodbClient);
+
+      store.getMovie({key: {year: 2013, title: "Superman"}}, handleError(done, function(results) {
+        // this operation should never succeed, meaning this line should not be executed
+        expect(true).to.be.false;
+        return done();
+      }));
+
+      global.setTimeout(_ => {return done();}, 1000);
     });
   });
 });

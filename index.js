@@ -5,16 +5,17 @@ var queryBuilder = require('./query-builder');
 var dynochamber = {};
 
 //TODO add support for schema-related operations like crate/delete tables, update table etc.
-dynochamber.loadStore = function(storeDefinition) {
+dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
   var tableName = storeDefinition.tableName;
   var schema = storeDefinition.schema;
   var operations = storeDefinition.operations;
+  var documentClient = customDynamoDB ? new aws.DynamoDB.DocumentClient({service: customDynamoDB}) : new aws.DynamoDB.DocumentClient();
 
   var store = {
     _tableName: tableName,
     _schema: schema,
     _operations: operations,
-    _documentClient: new aws.DynamoDB.DocumentClient()
+    _documentClient: documentClient
   };
 
   store = _.reduce(operations, dynochamber._addOperataion, store);
