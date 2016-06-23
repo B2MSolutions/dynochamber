@@ -68,7 +68,7 @@ dynochamber._standardOperation = function(params, callback) {
 
 dynochamber._addOperataion = function(store, operation, operationName) {
   store[operationName] = function(model, callback) {
-    model = model || {};
+    model = _.cloneDeep(model) || {};
     var options = model._options || {};
     model = queryBuilder.cleanFromNonDynamoData(model);
 
@@ -105,7 +105,7 @@ dynochamber._operations = {
 
 //---helper options---
 dynochamber.makeRecordsCounter = function(queryObj) {
-  queryObj = queryObj || {};
+  queryObj = _.cloneDeep(queryObj) || {};
   var options = queryObj ? (queryObj._options || {}) : {};
 
   queryObj._options =  _.assign(options, {

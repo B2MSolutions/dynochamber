@@ -326,7 +326,10 @@ describe("integration tests for dynochamber", function() {
     });
 
     it("should support helper paging reducer options", function(done) {
-      store.getMoviesCountWithPaging(dynochamber.makeRecordsCounter(), handleError(done, function(result) {
+      var params = {something: "hello"};
+      store.getMoviesCountWithPaging(dynochamber.makeRecordsCounter(params), handleError(done, function(result) {
+        //this expectation is written to verify that we do not modify passed parameters
+        expect(params).to.deep.equal({something: "hello"});
         expect(result).to.equal(14);
         return done();
       }));
