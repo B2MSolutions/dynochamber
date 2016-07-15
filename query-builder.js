@@ -31,11 +31,12 @@ queryBuilder._substitutePlaceholders = function(value, model) {
   var replacementKey = queryBuilder._stringIsPlaceholder(value);
   if (replacementKey) return model[replacementKey];
 
-  const regex = /\{\{([a-zA-Z]\w*)\}\}/g;
+  var regex = /\{\{([a-zA-Z]\w*)\}\}/g;
   var match;
   while ((match = regex.exec(value)) !== null) {
     var keyName = match[1];
     value = value.replace(new RegExp(`\{\{${keyName}\}\}`), model[keyName]);
+    regex = /\{\{([a-zA-Z]\w*)\}\}/g;
   }
 
   return value;

@@ -13,6 +13,13 @@ var storeDescription = {
       _type: 'put',
       Item: '{{movie}}'
     },
+    getMovieWithPart: {
+      _type: 'get',
+      Key: {
+        title: "{{title}}:{{part}}:{{subtitle}}",
+        year: "{{year}}"
+      }
+    },
     getMovie: {
       _type: 'get',
       Key: '{{key}}'
@@ -116,6 +123,19 @@ describe("integration tests for dynochamber", function() {
       store.getMovie({key: {year: 2013, title: "Superman"}}, handleError(done, function(results) {
         expect(results).to.not.exist;
         return done();
+      }));
+    }));
+  });
+
+  it("should get movie with composite placholder", function(done) {
+    var store = dynochamber.loadStore(storeDescription);
+    var movie = {year: 2013, title: "Superman:100:omg", gross: 2000000};
+
+    store.addMovie({movie}, handleError(done, function(results) {
+      store.getMovieWithPart({year: 2013, title: "Superman", part: "100", subtitle: "omg"}, handleError(done, function(results) {
+        expect(results).to.deep.equal(movie);
+
+        store.deleteMovie({key: {year: 2013, title: "Superman:100:omg"}}, done);
       }));
     }));
   });
