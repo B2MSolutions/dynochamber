@@ -201,4 +201,21 @@ You can add a validation function to a store description.
 Validation function gets called with an object that use passes to a store operation. To fail, validation function should return object with `failed` property set to `true`. All other results are considered non-failed.
 
 ---
+### Operation level table name
+You can specify a different table name when you call an operation on a store. This is supported for "recyclable" tables, when you need to switch between tables with the same schema in runtime (example, you don't want your table to be partitioned and want to save data to a new table)
+Example:
+```javascript
+// this will execute your query against "SOME_OTHER_TABLE" instead of the table set in the store definition
+store.getAllMovies({_options: {tableName: 'SOME_OTHER_TABLE'}, done);
+```
+
+You can also get a name of the table set in the store definition, using `getTableName` on the generated store object
+Example:
+```javascript
+var moviesStore = dynochamber.loadStore(storeDescription);
+
+// this prints 'movies'
+console.log(moviesStore.getTableName());
+```
+---
 Code released under the MIT license
