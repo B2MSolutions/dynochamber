@@ -456,4 +456,59 @@ describe("integration tests for dynochamber", function() {
       global.setTimeout(_ => {return done();}, 1000);
     });
   });
+
+  describe("operation-scope table name", function() {
+    it("should allow to specify a tablename for a specific operation (not paging)", function(done) {
+      var store = dynochamber.loadStore(storeDescription);
+      var movie = {year: 2018, title: "Hulk", gross: 200000};
+      var film = {year: 2018, title: "Hulk", gross: 100000};
+
+      expect(store.getTableName()).to.deep.equal("Movies");
+
+      // add movie
+      store.addMovie({movie}, handleError(done, function(results) {
+        // add film into a separate table
+        store.addMovie({movie: film, _options: {tableName: "Films"}}, handleError(done, function(results) {
+
+          // get from movies
+          store.getMovie({key: {year: 2018, title: "Hulk"}}, handleError(done, function(results) {
+            expect(results).to.deep.equal({
+              "title": "Hulk",
+              "gross": 200000,
+              "year": 2018
+            });
+
+            // get from films
+            store.getMovie({key: {year: 2018, title: "Hulk"}, _options: {tableName: "Films"}}, handleError(done, function(results) {
+              expect(results).to.deep.equal({
+                "title": "Hulk",
+                "gross": 100000,
+                "year": 2018
+              });
+
+              return done();
+            }));
+          }));
+        }));
+      }));
+    });
+
+    it("should allow to specify a tablename for a specific operation (paging)", function(done) {
+      var store = dynochamber.loadStore(storeDescription);
+
+      // movies hulk
+      store.queryMoviesByYear({year: 2018}, handleError(done, function(results) {
+        expect(results.length).to.equal(1);
+        expect(results[0]).to.deep.equal({year: 2018, title: 'Hulk', gross: 200000});
+
+        // films hulk
+        store.queryMoviesByYear({year: 2018, _options: {tableName: "Films"}}, handleError(done, function(results) {
+          expect(results.length).to.equal(1);
+          expect(results[0]).to.deep.equal({year: 2018, title: 'Hulk', gross: 100000});
+
+          return done();
+        }));
+      }));
+    });
+  });
 });
