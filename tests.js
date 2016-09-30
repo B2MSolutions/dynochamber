@@ -104,6 +104,11 @@ describe("integration tests for dynochamber", function() {
     provision(done);
   });
 
+  it("should support getting a name from a store", function() {
+    var store = dynochamber.loadStore(storeDescription);
+    expect(store.getTableName()).to.deep.equal("Movies");
+  });
+
   it("should create a movie", function(done) {
     var store = dynochamber.loadStore(storeDescription);
     var movie = {year: 2013, title: "Superman", gross: 2000000};
@@ -215,7 +220,7 @@ describe("integration tests for dynochamber", function() {
   });
 
   it("should support tableName as a function", function(done) {
-    var storeDefinition = {
+    var customStoreDefinition = {
       tableName: _ => "Movies",
       operations: {
         getMovie: {
@@ -225,7 +230,8 @@ describe("integration tests for dynochamber", function() {
       }
     };
 
-    var store = dynochamber.loadStore(storeDescription);
+    var store = dynochamber.loadStore(customStoreDefinition);
+    expect(store.getTableName()).to.deep.equal("Movies");
 
     store.getMovie({key: {year: 2015, title: "TMNT"}}, handleError(done, function(results) {
       var expectedResult = {
@@ -462,8 +468,6 @@ describe("integration tests for dynochamber", function() {
       var store = dynochamber.loadStore(storeDescription);
       var movie = {year: 2018, title: "Hulk", gross: 200000};
       var film = {year: 2018, title: "Hulk", gross: 100000};
-
-      expect(store.getTableName()).to.deep.equal("Movies");
 
       // add movie
       store.addMovie({movie}, handleError(done, function(results) {

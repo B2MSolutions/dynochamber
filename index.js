@@ -12,7 +12,7 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
   var documentClient = customDynamoDB ? new aws.DynamoDB.DocumentClient({service: customDynamoDB}) : new aws.DynamoDB.DocumentClient();
 
   var store = {
-    getTableName: function() { return this._tableName; },
+    getTableName: function() { return _.isFunction(this._tableName) ? this._tableName() : this._tableName; },
     _tableName: tableName,
     _schema: schema,
     _operations: operations,
@@ -26,8 +26,7 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
 dynochamber._pagingOperation = function(params, callback) {
   // if user passes a table name as an option for the operation, use it
   // instead of using the one from the store definition
-  var tableName = params.queryOptions.tableName || params.store._tableName;
-  params.builtQuery.TableName = tableName;
+  if (params.queryOptions.tableName) params.builtQuery.TableName = params.queryOptions.tableName;
 
   //if user does not want paging operation, then it is a standard operation
   if (!params.queryOptions.pages) return dynochamber._standardOperation(params, callback);
@@ -63,8 +62,7 @@ dynochamber._pagingOperation = function(params, callback) {
 dynochamber._standardOperation = function(params, callback) {
   // if user passes a table name as an option for the operation, use it
   // instead of using the one from the store definition
-  var tableName = params.queryOptions.tableName || params.store._tableName;
-  params.builtQuery.TableName = tableName;
+  if (params.queryOptions.tableName) params.builtQuery.TableName = params.queryOptions.tableName;
 
   return params.store._documentClient[params.operationType](params.builtQuery, function(err, results) {
     if (err) return callback(err);
