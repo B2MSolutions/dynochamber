@@ -23,6 +23,14 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
   return store;
 };
 
+dynochamber._batchGetPagingOperation = function(params, callback) {
+  if (params.builtQuery.RequestItems.tableName) {
+    params.builtQuery.RequestItems[params.builtQuery.TableName] = params.builtQuery.RequestItems.tableName;
+    delete params.builtQuery.RequestItems.tableName;
+  }
+  return dynochamber._pagingOperation(params, callback);
+};
+
 dynochamber._pagingOperation = function(params, callback) {
   // if user passes a table name as an option for the operation, use it
   // instead of using the one from the store definition
@@ -102,7 +110,7 @@ dynochamber._addOperataion = function(store, operation, operationName) {
 };
 
 dynochamber._operations = {
-  batchGet: {action: dynochamber._pagingOperation, extractResult: r => r.Responses},
+  batchGet: {action: dynochamber._batchGetPagingOperation, extractResult: r => r.Responses},
   get: {action: dynochamber._standardOperation, extractResult: r => r.Item},
   query: {action: dynochamber._pagingOperation, extractResult: r => r.Items},
   scan: {action: dynochamber._pagingOperation, extractResult: r => r.Items},

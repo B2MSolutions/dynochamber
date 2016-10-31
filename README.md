@@ -219,3 +219,25 @@ console.log(moviesStore.getTableName());
 ```
 ---
 Code released under the MIT license
+
+---
+### Table name in batchGet
+You can use table name set in store definition level inside BatchGetItem query. To do this use `tableName` as a table name inside `RequestItems` block. Dynochamber will replace `tableName` to actual table name 
+set in store definition.
+
+Example:
+```javascript
+{
+    tableName: "MoviesTables",
+    operations: { //store's operations
+    	getMovies: { //name of an operation on a store
+        	_type: 'batchGet',
+            RequestItems: {
+                tableName: { Keys: '{{keys}}' } // This will be rewritten to 'MoviesTable: { Keys: '{{keys}}' }
+            }
+        }
+    }
+}
+```
+---
+Code released under the MIT license
