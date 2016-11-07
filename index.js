@@ -9,7 +9,7 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
   var tableName = storeDefinition.tableName;
   var schema = storeDefinition.schema;
   var operations = storeDefinition.operations;
-  var documentClient = customDynamoDB ? new aws.DynamoDB.DocumentClient({service: customDynamoDB}) : new aws.DynamoDB.DocumentClient();
+  var documentClient = customDynamoDB ? new aws.DynamoDB.DocumentClient({ service: customDynamoDB }) : new aws.DynamoDB.DocumentClient();
 
   var store = {
     getTableName: function() { return _.isFunction(this._tableName) ? this._tableName() : this._tableName; },
@@ -75,11 +75,8 @@ dynochamber._standardOperation = function(params, callback) {
   return params.store._documentClient[params.operationType](params.builtQuery, function(err, results) {
     if (err) return callback(err);
 
-    if (params.queryOptions.raw === true) {
-      return callback(null, results);
-    }
-
-    return callback(null, params.dynochamberOperation.extractResult(results));
+    var result = dynochamber._bakeResults(params, results);
+    return callback(null, result);
   });
 };
 
@@ -103,21 +100,22 @@ dynochamber._addOperataion = function(store, operation, operationName) {
       dynochamberOperation: dynochamber._operations[operation._type]
     };
 
-    return dynochamber._operations[operation._type].action(queryActionParams, callback);
+    var outputCallback = dynochamber._buildOutputFunction(operation._outputBuilder, callback);
+    return dynochamber._operations[operation._type].action(queryActionParams, outputCallback);
   };
 
   return store;
 };
 
 dynochamber._operations = {
-  batchGet: {action: dynochamber._batchGetPagingOperation, extractResult: r => r.Responses},
-  get: {action: dynochamber._standardOperation, extractResult: r => r.Item},
-  query: {action: dynochamber._pagingOperation, extractResult: r => r.Items},
-  scan: {action: dynochamber._pagingOperation, extractResult: r => r.Items},
-  put: {action: dynochamber._standardOperation, extractResult: _.identity},
-  delete: {action: dynochamber._standardOperation, extractResult: _.identity},
-  update: {action: dynochamber._standardOperation, extractResult: _.identity},
-  batchWrite: {action: dynochamber._standardOperation, extractResult: _.identity}
+  batchGet: { action: dynochamber._batchGetPagingOperation, extractResult: r => r.Responses },
+  get: { action: dynochamber._standardOperation, extractResult: r => r.Item },
+  query: { action: dynochamber._pagingOperation, extractResult: r => r.Items },
+  scan: { action: dynochamber._pagingOperation, extractResult: r => r.Items },
+  put: { action: dynochamber._standardOperation, extractResult: _.identity },
+  delete: { action: dynochamber._standardOperation, extractResult: _.identity },
+  update: { action: dynochamber._standardOperation, extractResult: _.identity },
+  batchWrite: { action: dynochamber._standardOperation, extractResult: _.identity }
 };
 
 //---helper options---
@@ -125,7 +123,7 @@ dynochamber.makeRecordsCounter = function(queryObj) {
   queryObj = _.cloneDeep(queryObj) || {};
   var options = queryObj ? (queryObj._options || {}) : {};
 
-  queryObj._options =  _.assign(options, {
+  queryObj._options = _.assign(options, {
     raw: true,
     pages: 'all',
     pageReduce: (result, page) => result + page.Count, pageReduceInitial: 0
@@ -133,5 +131,22 @@ dynochamber.makeRecordsCounter = function(queryObj) {
 
   return queryObj;
 };
+
+dynochamber._bakeResults = function(params, results) {
+  if (params.queryOptions.raw === true) {
+    return results;
+  }
+
+  return params.dynochamberOperation.extractResult(results);
+};
+
+dynochamber._buildOutputFunction = function(outputBuilder, callback) {
+  return function(err, result) {
+    if (err) {
+      return callback(err, result);
+    }
+    return outputBuilder ? callback(null, outputBuilder(result)) : callback(null, result)
+  };
+}
 
 module.exports = dynochamber;
