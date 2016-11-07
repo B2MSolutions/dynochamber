@@ -1,6 +1,6 @@
 {
   "name": "dynochamber",
-  "version": "1.3.7",
+  "version": "1.4.0",
   "description": "Write DynamoDB queries in declarative way",
   "main": "index.js",
   "scripts": {
