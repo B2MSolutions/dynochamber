@@ -1,6 +1,6 @@
 {
   "name": "dynochamber",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Write DynamoDB queries in declarative way",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "^2.5.3"
+    "mocha": "^2.5.3",
+    "sinon": "^1.17.6"
   }
 }

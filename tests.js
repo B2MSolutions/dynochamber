@@ -5,6 +5,7 @@ var expect = require('chai').expect;
 var provision = require('./provision-tests');
 var dynochamber = require('./index');
 var dynoHelpers = require('./helpers');
+var sinon = require('sinon');
 
 var storeDescription = {
   tableName: "Movies",
@@ -432,6 +433,27 @@ describe("integration tests for dynochamber", function() {
       });
     });
 
+    it("should call validator once", function(done) {
+      var descriptionWithValidator = {
+        tableName: "Movies",
+        operations: {
+          addMovie: {
+            _type: 'put',
+            _validator: m => ({ failed: false }),
+            Item: '{{movie}}'
+          }
+        }
+      };
+      var spy = sinon.spy(descriptionWithValidator.operations.addMovie, "_validator");
+      var store = dynochamber.loadStore(descriptionWithValidator);
+
+      store.addMovie({ movie: { year: 2010, title: 'Dark Knight' } }, function(err, results) {
+        expect(spy.called).to.be.true;
+        expect(spy.callCount).to.be.equal(1);
+        return done();
+      });
+    });
+
     it("should not fail if validator returns nothing", function(done) {
       var descriptionWithValidator = {
         tableName: "Movies",
@@ -555,7 +577,7 @@ describe("integration tests for dynochamber", function() {
             ExpressionAttributeValues: {
               ':year': '{{year}}'
             },
-            _outputBuilder: results => _.map(results, 'title')
+            _outputBuilder: results => _.map(results.Items, 'title')
           }
         }
       };
@@ -570,7 +592,62 @@ describe("integration tests for dynochamber", function() {
       });
     });
 
-    it("should use outputBuilder before returning results with raw", function(done) {
+    it("should use outputBuilder only once", function(done) {
+      var descriptionWithBuilder = {
+        tableName: "Movies",
+        operations: {
+          getMovieNames: {
+            _type: 'query',
+            KeyConditionExpression: '#year = :year',
+            ExpressionAttributeNames: {
+              '#year': 'year'
+            },
+            ExpressionAttributeValues: {
+              ':year': '{{year}}'
+            },
+            _outputBuilder: results => _.map(results.Items, 'title')
+          }
+        }
+      };
+      var spy = sinon.spy(descriptionWithBuilder.operations.getMovieNames, "_outputBuilder");
+      var store = dynochamber.loadStore(descriptionWithBuilder);
+
+      store.getMovieNames({ year: 1985 }, function(err, results) {
+        expect(spy.called).to.be.true;
+        expect(spy.callCount).to.be.equal(1);
+        return done();
+      });
+    });
+
+    it("should return error when outputBuilder throws", function(done) {
+      var descriptionWithBuilder = {
+        tableName: "Movies",
+        operations: {
+          getMovieNames: {
+            _type: 'query',
+            KeyConditionExpression: '#year = :year',
+            ExpressionAttributeNames: {
+              '#year': 'year'
+            },
+            ExpressionAttributeValues: {
+              ':year': '{{year}}'
+            },
+            _outputBuilder: results => { throw "outputBuilder error" }
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithBuilder);
+
+      store.getMovieNames({ year: 1985 }, function(err, results) {
+        expect(err).to.equal("outputBuilder error");
+        expect(results).to.not.exist;
+
+        return done();
+      });
+    });
+
+    it("should ignore outputBuilder before returning results with raw", function(done) {
       var descriptionWithBuilder = {
         tableName: "Movies",
         operations: {
@@ -594,11 +671,21 @@ describe("integration tests for dynochamber", function() {
       store.getMovieNames({ year: 1985, _options: { raw: true } }, function(err, results) {
         expect(err).to.not.exist;
         expect(results).to.deep.equal({
-          items: ['A Nightmare on Elm Street Part 2: Freddy\'s Revenge', 'Back to the Future'],
-          lastKey: {
-            "title": "Back to the Future",
-            "year": 1985
+          Items: [{
+            title: "A Nightmare on Elm Street Part 2: Freddy's Revenge",
+            year: 1985
+          },
+          {
+            title: "Back to the Future",
+            year: 1985
           }
+          ],
+          LastEvaluatedKey: {
+            title: "Back to the Future",
+            year: 1985
+          },
+          Count: 2,
+          ScannedCount: 2
         });
 
         return done();
@@ -619,7 +706,7 @@ describe("integration tests for dynochamber", function() {
               ':year': '{{year}}'
             },
             Limit: 1,
-            _outputBuilder: results => _.map(results, 'title')
+            _outputBuilder: results => _.map(results.Items, 'title')
           }
         }
       };
@@ -634,7 +721,36 @@ describe("integration tests for dynochamber", function() {
       });
     });
 
-    it("should use outputBuilder when using paging with reduce and raw", function(done) {
+    it("should return error when outputBuilder throws when using paging with reduce", function(done) {
+      var descriptionWithBuilder = {
+        tableName: "Movies",
+        operations: {
+          getMovieNames: {
+            _type: 'query',
+            KeyConditionExpression: '#year = :year',
+            ExpressionAttributeNames: {
+              '#year': 'year'
+            },
+            ExpressionAttributeValues: {
+              ':year': '{{year}}'
+            },
+            Limit: 1,
+            _outputBuilder: results => { throw "outputBuilder Error" }
+          }
+        }
+      };
+
+      var store = dynochamber.loadStore(descriptionWithBuilder);
+
+      store.getMovieNames({ year: 1985, _options: { pages: 'all', pageReduce: (result, page) => _.union(result, page), pageReduceInitial: [] }, }, function(err, results) {
+        expect(err).to.be.equal("outputBuilder Error");
+        expect(results).to.not.exist;
+
+        return done();
+      });
+    });
+
+    it("should ignore outputBuilder when using paging with reduce and raw", function(done) {
       var descriptionWithBuilder = {
         tableName: "Movies",
         operations: {
@@ -659,8 +775,16 @@ describe("integration tests for dynochamber", function() {
       store.getMovieNames({ year: 1985, _options: { raw: true, pages: 'all', pageReduce: reducer, pageReduceInitial: { Items: [], Count: 0 } }, }, function(err, results) {
         expect(err).to.not.exist;
         expect(results).to.deep.equal({
-          items: ['1985#A Nightmare on Elm Street Part 2: Freddy\'s Revenge', '1985#Back to the Future', '1985#Commando', '1985#Robocop', '1985#Rocky IV', '1985#The Breakfast Club', '1985#The Goonies'],
-          total: 7
+          Count: 7,
+          Items: [
+            { title: 'A Nightmare on Elm Street Part 2: Freddy\'s Revenge', year: 1985 },
+            { title: 'Back to the Future', year: 1985 },
+            { title: 'Commando', year: 1985 },
+            { title: 'Robocop', year: 1985 },
+            { title: 'Rocky IV', year: 1985 },
+            { title: 'The Breakfast Club', year: 1985 },
+            { title: 'The Goonies', year: 1985 }
+          ]
         });
 
         return done();

@@ -211,7 +211,7 @@ You can add builder function to a store description.
     	nameOfOperation: { //name of an operation on a store
         	_type: 'query',
         	// DocumentClient query goes here
-            _outputBuilder: function(result) { /* output building logic */ }
+            _outputBuilder: function(rawResult) { /* output building logic */ }
         }
     }
 }
@@ -219,7 +219,11 @@ You can add builder function to a store description.
 
 Output builder function gets called before returning data. It is useful to restructure data in the way application expects to receive it back.
 
-When used with paging and reducer, output builder function will be called after all paging and reducing is completed, right before returning results back.
+Output builder always receive raw database data.
+
+When used with paging and reducer, output builder function will be called before passing data to reducer. So reducer will aggregate built results in this case.
+
+Same rule applies to pageCallback, it will receive result returned by output builder for each page.
 
 ---
 ### Operation level table name

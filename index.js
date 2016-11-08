@@ -50,7 +50,11 @@ dynochamber._pagingOperation = function(params, callback) {
       if (err) return whileCallback(err);
 
       lastEvaluatedKey = results.LastEvaluatedKey;
-      results = params.queryOptions.raw === true ? results : params.dynochamberOperation.extractResult(results);
+      try {
+        results = dynochamber._bakeResults(params, results);
+      } catch (outputErr) {
+        return whileCallback(outputErr);
+      }
 
       if (_.isFunction(params.queryOptions.pageCallback)) return params.queryOptions.pageCallback(results, whileCallback);
       if (_.isFunction(params.queryOptions.pageReduce)) {
@@ -63,7 +67,7 @@ dynochamber._pagingOperation = function(params, callback) {
   }, function() {
     return !_.isUndefined(lastEvaluatedKey) && !_.isNull(lastEvaluatedKey);
   }, function(err, results) {
-    return callback(err, params.queryOptions.pageReduce ? reducerResult : null);
+    return callback(err, params.queryOptions.pageReduce && !err ? reducerResult : null);
   });
 };
 
@@ -71,12 +75,15 @@ dynochamber._standardOperation = function(params, callback) {
   // if user passes a table name as an option for the operation, use it
   // instead of using the one from the store definition
   if (params.queryOptions.tableName) params.builtQuery.TableName = params.queryOptions.tableName;
-
   return params.store._documentClient[params.operationType](params.builtQuery, function(err, results) {
     if (err) return callback(err);
 
-    var result = dynochamber._bakeResults(params, results);
-    return callback(null, result);
+    try {
+      return callback(null, dynochamber._bakeResults(params, results));
+    }
+    catch (outputErr) {
+      return callback(outputErr);
+    }
   });
 };
 
@@ -97,11 +104,11 @@ dynochamber._addOperataion = function(store, operation, operationName) {
       builtQuery,
       queryOptions: options,
       operationType: operation._type,
-      dynochamberOperation: dynochamber._operations[operation._type]
+      dynochamberOperation: dynochamber._operations[operation._type],
+      outputBuilder: operation._outputBuilder
     };
 
-    var outputCallback = dynochamber._buildOutputFunction(operation._outputBuilder, callback);
-    return dynochamber._operations[operation._type].action(queryActionParams, outputCallback);
+    return dynochamber._operations[operation._type].action(queryActionParams, callback);
   };
 
   return store;
@@ -137,16 +144,11 @@ dynochamber._bakeResults = function(params, results) {
     return results;
   }
 
+  if (params.outputBuilder) {
+    return params.outputBuilder(results);
+  }
+
   return params.dynochamberOperation.extractResult(results);
 };
-
-dynochamber._buildOutputFunction = function(outputBuilder, callback) {
-  return function(err, result) {
-    if (err) {
-      return callback(err, result);
-    }
-    return outputBuilder ? callback(null, outputBuilder(result)) : callback(null, result)
-  };
-}
 
 module.exports = dynochamber;
