@@ -25,7 +25,9 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
 
 dynochamber._batchGetPagingOperation = function(params, callback) {
   if (params.builtQuery.RequestItems.tableName) {
-    params.builtQuery.RequestItems[params.builtQuery.TableName] = params.builtQuery.RequestItems.tableName;
+    var tableNameForBatchGet = params.queryOptions.tableName || params.builtQuery.TableName;
+    params.builtQuery.RequestItems[tableNameForBatchGet] = params.builtQuery.RequestItems.tableName;
+
     delete params.builtQuery.RequestItems.tableName;
   }
   return dynochamber._pagingOperation(params, callback);
