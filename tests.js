@@ -188,6 +188,37 @@ describe("integration tests for dynochamber", function() {
     }));
   });
 
+  it("should batch get movies if dynamic table name used in batch get and tableName passed through options", function(done) {
+    var storeDescriptionWithIncorrectTableName = {
+      tableName: "Movies-Incorrect",
+      operations: {
+        getMoviesWithDynamicTableName: {
+          _type: 'batchGet',
+          RequestItems: {
+            tableName: { Keys: '{{keys}}' }
+          },
+          Limit: 3
+        }
+      }
+    };
+    var store = dynochamber.loadStore(storeDescriptionWithIncorrectTableName);
+    var movies = [{ year: 2015, title: "TMNT", gross: 100000 },
+                  { year: 2015, title: "Interstellar", gross: 10000000 }];
+
+    store.getMoviesWithDynamicTableName({
+      keys: _.map(movies, _.partialRight(_.omit, ['gross'])),
+      _options: { tableName: 'Movies' }
+    }, handleError(done, function(results) {
+      var tmnt = _.find(results.Movies, m => m.title === 'TMNT');
+      expect(tmnt).to.deep.equal(movies[0]);
+
+      var interstellar = _.find(results.Movies, m => m.title === 'Interstellar');
+      expect(interstellar).to.deep.equal(movies[1]);
+
+      return done();
+    }));
+  });
+
   it("should update movie", function(done) {
     var store = dynochamber.loadStore(storeDescription);
 
