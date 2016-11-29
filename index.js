@@ -81,11 +81,13 @@ dynochamber._standardOperation = function(params, callback) {
     if (err) return callback(err);
 
     try {
-      return callback(null, dynochamber._bakeResults(params, results));
+      results = dynochamber._bakeResults(params, results);
     }
     catch (outputErr) {
       return callback(outputErr);
     }
+
+    return callback(null, results);
   });
 };
 
