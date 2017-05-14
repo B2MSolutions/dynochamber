@@ -2,7 +2,7 @@
 
 ### Rationale
 Dynochamber helps you to build a store layer for your app from a list of DynamoDB operations.
-Usually, we a module, like `store` that exposes storage-related operations, like create, read, update, delete, and different queries with parameters.
+Usually, we have a module, like `store` that exposes storage-related operations, like create, read, update, delete, and different queries with parameters.
 
 ```javascript
 exports.getMovie = function(year, title, callback) {
