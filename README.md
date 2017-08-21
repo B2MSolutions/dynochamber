@@ -179,7 +179,7 @@ var pageCallback = function(page, callback) {
     callback();
 };
 
-store.scanItems({_options: {page: 'all', pageCallback: pageCallback}, done);
+store.scanItems({_options: {pages: 'all', pageCallback: pageCallback}, done);
 ```
 ---
 ### Validation
