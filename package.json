@@ -4,19 +4,19 @@
   "description": "Write DynamoDB queries in declarative way",
   "main": "index.js",
   "scripts": {
-    "test": "python ./tests-runner.py"
+    "test": "mocha ./tests.js"
   },
   "author": "Ivan Bokii",
   "license": "MIT",
   "dependencies": {
-    "async": "^2.0.0-rc.5",
-    "aws-sdk": "^2.3.16",
-    "lodash": "^4.13.1",
-    "traverse": "^0.6.6"
+    "async": "2.6.4",
+    "aws-sdk": "2.1691.0",
+    "lodash": "4.17.21",
+    "traverse": "0.6.10"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^2.5.3",
-    "sinon": "^1.17.6"
+    "chai": "4.5.0",
+    "mocha": "10.7.3",
+    "sinon": "15.1.0"
   }
 }

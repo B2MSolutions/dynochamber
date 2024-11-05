@@ -1,4 +1,4 @@
-var aws = require('aws-sdk');
+var DynamoDB = require('aws-sdk/clients/dynamodb');
 var _ = require('lodash');
 var async = require('async');
 var queryBuilder = require('./query-builder');
@@ -9,7 +9,7 @@ dynochamber.loadStore = function(storeDefinition, customDynamoDB) {
   var tableName = storeDefinition.tableName;
   var schema = storeDefinition.schema;
   var operations = storeDefinition.operations;
-  var documentClient = customDynamoDB ? new aws.DynamoDB.DocumentClient({ service: customDynamoDB }) : new aws.DynamoDB.DocumentClient();
+  var documentClient = customDynamoDB ? new DynamoDB.DocumentClient({ service: customDynamoDB }) : new DynamoDB.DocumentClient();
 
   var store = {
     getTableName: function() { return _.isFunction(this._tableName) ? this._tableName() : this._tableName; },

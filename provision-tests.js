@@ -1,8 +1,7 @@
-var AWS = require("aws-sdk");
+var AWS = require('aws-sdk/global');
 var async = require("async");
 
 AWS.config.update({
-  region: "us-west-2",
   endpoint: "http://localhost:8000",
   accessKeyId: 'accessKeyId',
   secretAccessKey: 'secretAccessKey'

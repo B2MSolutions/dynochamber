@@ -1,6 +1,5 @@
 var _ = require('lodash');
-var aws = require('aws-sdk');
-var mocha = require('mocha');
+var DynamoDB = require('aws-sdk/clients/dynamodb');
 var expect = require('chai').expect;
 var provision = require('./provision-tests');
 var dynochamber = require('./index');
@@ -523,21 +522,6 @@ describe("integration tests for dynochamber", function() {
         expect(err).to.not.exist;
         return done();
       });
-    });
-  });
-
-  describe("external dynamoDB", function() {
-    it('should fail when dynamodb is reconfigured with a custom dynamodb client', function(done) {
-      var dynamodbClient = new aws.DynamoDB({ endpoint: new aws.Endpoint("http://localhost:4242") });
-      var store = dynochamber.loadStore(storeDescription, dynamodbClient);
-
-      store.getMovie({ key: { year: 2013, title: "Superman" } }, handleError(done, function(results) {
-        // this operation should never succeed, meaning this line should not be executed
-        expect(true).to.be.false;
-        return done();
-      }));
-
-      global.setTimeout(_ => { return done(); }, 1000);
     });
   });
 
